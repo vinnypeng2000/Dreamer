@@ -13,6 +13,9 @@ public class LightController : MonoBehaviour
     public MonoBehaviour playerMovementScript; // Reference to the player movement script
     public float burnSpeed = 0.2f; // Speed at which objects burn away
     public float raycastDistance = 50f; // Maximum distance for the raycast
+    public Camera cam;
+    public Vector3 targetRotation;
+    public Vector3 targetPosition = new Vector3(-10.44f,0.82f,2.7f);
 
     private bool isPlayerInRange = false; // To check if the player is near the trigger
     private bool isControllingLight = false; // To check if the player is controlling the light
@@ -67,6 +70,8 @@ public class LightController : MonoBehaviour
     void EnterOperationMode()
     {
         isControllingLight = true;
+        player.transform.position = targetPosition;
+        cam.transform.rotation = Quaternion.Euler(targetRotation);
         actionText.gameObject.SetActive(false); // Hide the "Press E to Operate" text
         exitText.gameObject.SetActive(true); // Show the "Press ESC to Exit" text
         Cursor.lockState = CursorLockMode.None; // Unlock the cursor for light control
@@ -83,6 +88,7 @@ public class LightController : MonoBehaviour
 
     void ControlLightDirection()
     {
+
         float mouseX = Input.GetAxis("Mouse X") * 100f * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * 100f * Time.deltaTime;
 
@@ -95,6 +101,9 @@ public class LightController : MonoBehaviour
         // Cast a ray from the spotlight to detect objects in the spotlight's direction
         Ray ray = new Ray(spotlight.transform.position, spotlight.transform.forward);
         RaycastHit hit;
+
+        Debug.DrawRay(spotlight.transform.position, spotlight.transform.forward * raycastDistance, Color.red);
+
 
         if (Physics.Raycast(ray, out hit, raycastDistance))
         {
