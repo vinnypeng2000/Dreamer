@@ -16,6 +16,8 @@ public class DoorController : MonoBehaviour
     private Quaternion initialRotation;   // The original rotation of the door
     private Quaternion finalRotation;     // The final rotation of the door
 
+    public GameObject keyUI;
+
     void Start()
     {
         // Store the initial rotation of the door
@@ -32,6 +34,7 @@ public class DoorController : MonoBehaviour
         {
             text.SetActive(false);
             StartCoroutine(RotateDoor());
+            keyUI.SetActive(false);
         }
     }
 

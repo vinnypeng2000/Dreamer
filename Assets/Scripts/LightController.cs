@@ -119,6 +119,8 @@ public class LightController : MonoBehaviour
     // Coroutine to burn the object by reducing its scale over time
     System.Collections.IEnumerator BurnObject(GameObject burnable)
     {
+        if (burnable == null) yield break;
+
         Renderer renderer = burnable.GetComponent<Renderer>();
         if (renderer == null) yield break;
 
@@ -130,7 +132,7 @@ public class LightController : MonoBehaviour
         {
             burnAmount += Time.deltaTime * burnSpeed;
 
-            // Optional: Apply material transparency or color change to simulate burning
+            if (renderer == null) yield break;
             if (renderer.material.HasProperty("_Color"))
             {
                 Color color = renderer.material.color;

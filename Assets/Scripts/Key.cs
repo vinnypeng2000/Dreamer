@@ -8,12 +8,14 @@ public class Key : MonoBehaviour
     public DoorController doorController;
     public GameObject text;
     public bool entered;
+    public GameObject keyUI;
 
     // Start is called before the first frame update
     void Start()
     {
         text.SetActive(false);
         entered = false;
+        keyUI.SetActive(false);
     }
 
     // Update is called once per frame
@@ -24,6 +26,7 @@ public class Key : MonoBehaviour
             doorController.key = true;
             text.SetActive(false);
             Destroy(transform.parent.gameObject);
+            keyUI.SetActive(true);
         }
     }
 
