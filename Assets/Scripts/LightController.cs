@@ -6,24 +6,28 @@ using TMPro;
 
 public class LightController : MonoBehaviour
 {
-    public Light spotlight; // Reference to the spotlight
-    public TextMeshProUGUI actionText; // UI Text for "Press E to Operate"
-    public TextMeshProUGUI exitText; // UI Text for "Press ESC to Exit"
-    public GameObject player; // Reference to the player object
-    public MonoBehaviour playerMovementScript; // Reference to the player movement script
-    public float burnSpeed = 0.2f; // Speed at which objects burn away
-    public float raycastDistance = 50f; // Maximum distance for the raycast
+    public Light spotlight;
+    public TextMeshProUGUI actionText;
+    public TextMeshProUGUI exitText;
+    public GameObject player;
+    public MonoBehaviour playerMovementScript;
+    public float burnSpeed = 0.2f;
+    public float raycastDistance = 50f;
     public Camera cam;
-    public Vector3 targetRotation;
-    public Vector3 targetPosition = new Vector3(-10.44f,0.82f,2.7f);
+    public Vector3 targetRotation;  // Set in Inspector
+    public Vector3 targetPosition;  // Set in Inspector, no default
 
-    private bool isPlayerInRange = false; // To check if the player is near the trigger
-    private bool isControllingLight = false; // To check if the player is controlling the light
+    private bool isPlayerInRange = false;
+    private bool isControllingLight = false;
+
+    private List<string> burnSequence = new List<string> { "Money", "Laptop", "Sandclock" };
+    private int currentBurnIndex = 0;
 
     void Start()
     {
-        actionText.gameObject.SetActive(false); // Hide "Press E to Operate" text initially
-        exitText.gameObject.SetActive(false); // Hide "Press ESC to Exit" text initially
+        actionText.gameObject.SetActive(false);
+        exitText.gameObject.SetActive(false);
+        // Debug.Log(targetPosition);
     }
 
     void Update()
@@ -54,7 +58,7 @@ public class LightController : MonoBehaviour
         if (other.gameObject == player)
         {
             isPlayerInRange = true;
-            actionText.gameObject.SetActive(true); // Show "Press E to Operate" text when player enters the trigger
+            actionText.gameObject.SetActive(true);
         }
     }
 
@@ -63,32 +67,33 @@ public class LightController : MonoBehaviour
         if (other.gameObject == player)
         {
             isPlayerInRange = false;
-            actionText.gameObject.SetActive(false); // Hide the text when player leaves the trigger
+            actionText.gameObject.SetActive(false);
         }
     }
 
     void EnterOperationMode()
     {
         isControllingLight = true;
-        player.transform.position = targetPosition;
+        Debug.Log("Script attached to: " + gameObject.name);
+        Debug.Log("Target Position: " + targetPosition);
+        player.transform.position = targetPosition; // Use Inspector value for targetPosition
         cam.transform.rotation = Quaternion.Euler(targetRotation);
-        actionText.gameObject.SetActive(false); // Hide the "Press E to Operate" text
-        exitText.gameObject.SetActive(true); // Show the "Press ESC to Exit" text
-        Cursor.lockState = CursorLockMode.None; // Unlock the cursor for light control
-        playerMovementScript.enabled = false; // Disable player movement
+        actionText.gameObject.SetActive(false);
+        exitText.gameObject.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+        playerMovementScript.enabled = false;
     }
 
     void ExitOperationMode()
     {
         isControllingLight = false;
-        exitText.gameObject.SetActive(false); // Hide the "Press ESC to Exit" text
-        Cursor.lockState = CursorLockMode.Locked; // Lock the cursor again
-        playerMovementScript.enabled = true; // Enable player movement
+        exitText.gameObject.SetActive(false);
+        Cursor.lockState = CursorLockMode.Locked;
+        playerMovementScript.enabled = true;
     }
 
     void ControlLightDirection()
     {
-
         float mouseX = Input.GetAxis("Mouse X") * 100f * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * 100f * Time.deltaTime;
 
@@ -98,25 +103,31 @@ public class LightController : MonoBehaviour
 
     void RaycastAndBurn()
     {
-        // Cast a ray from the spotlight to detect objects in the spotlight's direction
         Ray ray = new Ray(spotlight.transform.position, spotlight.transform.forward);
         RaycastHit hit;
 
         Debug.DrawRay(spotlight.transform.position, spotlight.transform.forward * raycastDistance, Color.red);
 
-
         if (Physics.Raycast(ray, out hit, raycastDistance))
         {
-            // Check if the hit object is burnable
-            if (hit.collider.CompareTag("Burnable"))
+            if (hit.collider.CompareTag("Burnable") && currentBurnIndex < burnSequence.Count)
             {
-                // Start the burn effect on the object
-                StartCoroutine(BurnObject(hit.collider.gameObject));
+                string objectName = hit.collider.gameObject.name;
+
+                if (objectName == burnSequence[currentBurnIndex])
+                {
+                    StartCoroutine(BurnObject(hit.collider.gameObject));
+                    currentBurnIndex++;
+
+                    if (currentBurnIndex >= burnSequence.Count)
+                    {
+                        Debug.Log("All objects burned in the correct order!");
+                    }
+                }
             }
         }
     }
 
-    // Coroutine to burn the object by reducing its scale over time
     System.Collections.IEnumerator BurnObject(GameObject burnable)
     {
         if (burnable == null) yield break;
@@ -127,7 +138,6 @@ public class LightController : MonoBehaviour
         float burnAmount = 0f;
         Vector3 originalScale = burnable.transform.localScale;
 
-        // Gradually burn the object by scaling it down over time
         while (burnAmount < 1f)
         {
             burnAmount += Time.deltaTime * burnSpeed;
@@ -136,19 +146,14 @@ public class LightController : MonoBehaviour
             if (renderer.material.HasProperty("_Color"))
             {
                 Color color = renderer.material.color;
-                color.a = Mathf.Lerp(1f, 0f, burnAmount); // Gradually make the object transparent
+                color.a = Mathf.Lerp(1f, 0f, burnAmount);
                 renderer.material.color = color;
             }
 
-            // Scale down the object gradually to simulate it burning away
             burnable.transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, burnAmount);
-
-            // Wait for the next frame
             yield return null;
         }
 
-        // Destroy the object after it's fully burned away
         Destroy(burnable);
     }
 }
-

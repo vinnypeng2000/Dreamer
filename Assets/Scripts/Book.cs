@@ -9,6 +9,7 @@ public class Book : MonoBehaviour
     public GameObject bookUI;
     public bool read;
     public GameObject exitText;
+    public MonoBehaviour playerMovementScript; // Reference to the player movement script
 
     // Start is called before the first frame update
     void Start()
@@ -29,12 +30,14 @@ public class Book : MonoBehaviour
                 bookUI.SetActive(true);
                 exitText.SetActive(true);
                 readText.SetActive(false);
+                playerMovementScript.enabled = false; // Disable player movement
             }
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 bookUI.SetActive(false);
                 read = false;
                 exitText.SetActive(false);
+                playerMovementScript.enabled = true; // Enable player movement
             }
         }
     }
