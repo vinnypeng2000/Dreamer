@@ -8,7 +8,11 @@ public class SpinObject : MonoBehaviour
 
     void Update()
     {
-        // Rotate the object around the z-axis at the specified speed
-        transform.Rotate(0, 0, spinSpeed * Time.deltaTime);
+        if (this.gameObject.CompareTag("Car"))
+        {
+            transform.Rotate(0, spinSpeed * Time.deltaTime, 0);
+        }
+        else
+            transform.Rotate(0, 0, spinSpeed * Time.deltaTime);
     }
 }
