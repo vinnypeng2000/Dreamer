@@ -16,18 +16,30 @@ public class LightController : MonoBehaviour
     public Camera cam;
     public Vector3 targetRotation;  // Set in Inspector
     public Vector3 targetPosition;  // Set in Inspector, no default
+    public float rotationSpeed;
+    // public float xMinAngle;
+    // public float xMaxAngle;
+    // public float yMinAngle;
+    // public float yMaxAngle;
 
     private bool isPlayerInRange = false;
     private bool isControllingLight = false;
 
-    private List<string> burnSequence = new List<string> { "Money", "Laptop", "Sandclock" };
+    [System.Serializable]
+    public class BurnableObject
+    {
+        public string name;
+        public bool done = false;
+        public GameObject objectToBurn;
+    }
+
+    public List<BurnableObject> burnSequence; 
     private int currentBurnIndex = 0;
 
     void Start()
     {
         actionText.gameObject.SetActive(false);
         exitText.gameObject.SetActive(false);
-        // Debug.Log(targetPosition);
     }
 
     void Update()
@@ -74,8 +86,6 @@ public class LightController : MonoBehaviour
     void EnterOperationMode()
     {
         isControllingLight = true;
-        Debug.Log("Script attached to: " + gameObject.name);
-        Debug.Log("Target Position: " + targetPosition);
         player.transform.position = targetPosition; // Use Inspector value for targetPosition
         cam.transform.rotation = Quaternion.Euler(targetRotation);
         actionText.gameObject.SetActive(false);
@@ -94,8 +104,8 @@ public class LightController : MonoBehaviour
 
     void ControlLightDirection()
     {
-        float mouseX = Input.GetAxis("Mouse X") * 100f * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * 100f * Time.deltaTime;
+        float mouseX = Input.GetAxis("Mouse X") * rotationSpeed * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * rotationSpeed * Time.deltaTime;
 
         spotlight.transform.Rotate(Vector3.up, mouseX, Space.World);
         spotlight.transform.Rotate(Vector3.right, -mouseY, Space.Self);
@@ -108,21 +118,19 @@ public class LightController : MonoBehaviour
 
         Debug.DrawRay(spotlight.transform.position, spotlight.transform.forward * raycastDistance, Color.red);
 
-        if (Physics.Raycast(ray, out hit, raycastDistance))
+        if (Physics.Raycast(ray, out hit, raycastDistance) && currentBurnIndex < burnSequence.Count)
         {
-            if (hit.collider.CompareTag("Burnable") && currentBurnIndex < burnSequence.Count)
+            GameObject expectedObject = burnSequence[currentBurnIndex].objectToBurn;
+
+            if (hit.collider.gameObject == expectedObject)
             {
-                string objectName = hit.collider.gameObject.name;
+                StartCoroutine(BurnObject(expectedObject));
+                burnSequence[currentBurnIndex].done = true;
+                currentBurnIndex++;
 
-                if (objectName == burnSequence[currentBurnIndex])
+                if (currentBurnIndex >= burnSequence.Count)
                 {
-                    StartCoroutine(BurnObject(hit.collider.gameObject));
-                    currentBurnIndex++;
-
-                    if (currentBurnIndex >= burnSequence.Count)
-                    {
-                        Debug.Log("All objects burned in the correct order!");
-                    }
+                    Debug.Log("All objects burned in the correct order!");
                 }
             }
         }
